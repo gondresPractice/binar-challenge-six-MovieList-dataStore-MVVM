@@ -17,12 +17,14 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.binaracademy.movapp_mvvm_datastorage.R
 import com.binaracademy.movapp_mvvm_datastorage.adapter.MovieAdapter
+import com.binaracademy.movapp_mvvm_datastorage.data_store.UserManager
 import com.binaracademy.movapp_mvvm_datastorage.database.create_db.UserDatabase
 import com.binaracademy.movapp_mvvm_datastorage.databinding.FragmentMainBinding
 import com.binaracademy.movapp_mvvm_datastorage.databinding.FragmentRegisterBinding
 import com.binaracademy.movapp_mvvm_datastorage.view_model.MovieVM
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 class HomeFragment : Fragment() {
@@ -30,16 +32,16 @@ class HomeFragment : Fragment() {
     private lateinit var binding : FragmentMainBinding
     private val sharedPref = "sharedpreferences"
     private val movieViewModel : MovieVM by viewModels()
+    private val homeViewModel : HomeViewModel by viewModel()
     private var user_db : UserDatabase? = null
-    lateinit var userManager : com.binaracademy.movapp_mvvm_datastorage.data_store.UserManager
+    lateinit var userManager : UserManager
     lateinit var images : String
     lateinit var username : String
     var isLoggedIn : Boolean = false
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val sharedPreferences : SharedPreferences = requireActivity().getSharedPreferences(sharedPref, Context.MODE_PRIVATE)
-        user_db = UserDatabase.getInstance(requireContext())
-        userManager = com.binaracademy.movapp_mvvm_datastorage.data_store.UserManager(requireContext())
+
         images = sharedPreferences.getString("images","null").toString()
         getPhoto()
 
@@ -50,6 +52,10 @@ class HomeFragment : Fragment() {
             }
             binding.ivFavorite.setOnClickListener {
                 findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToFavoriteFragment())
+            }
+            homeViewModel.getUsername().observe(viewLifecycleOwner){
+                binding.tvUsername.setText("Welcome,$it")
+                homeViewModel.getPhotoProfile(it)
             }
 
         }
@@ -68,42 +74,41 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun observeData() {
 
-
-    }
 
     private fun getPhoto() {
-        userManager.userNameFlow.asLiveData().observe(requireActivity(),{
-            username = it
-            binding.tvUsername.setText("Welcome, $username")
 
-            Thread{
-                val result = user_db?.UserDao()?.getPhotoProfile(it)
-                activity?.runOnUiThread {
-                    if(result!=null) {
-                        Glide.with(requireActivity())
-                            .load(result)
-                            .apply(RequestOptions.centerCropTransform())
-                            .error(R.drawable.ic_baseline_profile_24)
-                            .into(binding.ivProfile)
-                        images = result
-                    }
-                    else{
-                        Toast.makeText(
-                            requireContext(),
-                            "Failed to load image",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }.start()
-        })
-        userManager.isLoggedInFlow.asLiveData().observe(requireActivity(),{
-            isLoggedIn = it
-        })
+          homeViewModel.getPhoto().observe(viewLifecycleOwner){
+              Log.d("Photo",it)
+              Glide.with(requireActivity())
+                  .load(it)
+                  .apply(RequestOptions.centerCropTransform())
+                  .into(binding.ivProfile)
+          }
 
-    }
+
+//            Thread{
+//                val result = user_db?.UserDao()?.getPhotoProfile(it)
+//                activity?.runOnUiThread {
+//                    if(result!=null) {
+//                        Glide.with(requireActivity())
+//                            .load(result)
+//                            .apply(RequestOptions.centerCropTransform())
+//                            .error(R.drawable.ic_baseline_profile_24)
+//                            .into(binding.ivProfile)
+//                        images = result
+//                    }
+//                    else{
+//                        Toast.makeText(
+//                            requireContext(),
+//                            "Failed to load image",
+//                            Toast.LENGTH_LONG
+//                        ).show()
+//                    }
+//                }
+//            }.start()
+        }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

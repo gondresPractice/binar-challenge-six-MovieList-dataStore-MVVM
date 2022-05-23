@@ -1,4 +1,4 @@
-package com.binaracademy.movapp_mvvm_datastorage.pages
+package com.binaracademy.movapp_mvvm_datastorage.pages.register
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -22,12 +22,14 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.binaracademy.movapp_mvvm_datastorage.database.create_db.UserDatabase
 import com.binaracademy.movapp_mvvm_datastorage.database.model_db.User
 import com.binaracademy.movapp_mvvm_datastorage.databinding.FragmentRegisterBinding
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -37,11 +39,12 @@ import java.util.*
 
 class RegisterFragment : Fragment() {
 
-
+    private var _binding : FragmentRegisterBinding?=null
+    private val registerViewModel : RegisterFragmentViewModel by viewModel()
     private var user_db: UserDatabase? = null
     private val REQUEST_CODE_PERMISSION = 100
-    lateinit var binding: FragmentRegisterBinding
-    lateinit var resultImage: String;
+    private val binding: FragmentRegisterBinding get() = _binding!!
+    private var resultImage: String = ""
     private val sharedPref = "sharedpreferences"
     private val galleryResult =
         registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
@@ -68,9 +71,7 @@ class RegisterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        user_db = UserDatabase.getInstance(requireContext())
-
-        binding.apply {
+      binding.apply {
             binding.addImage.setOnClickListener {
                 checkingPermissions()
             }
@@ -83,9 +84,6 @@ class RegisterFragment : Fragment() {
     }
 
     private fun checkRegister() {
-        val sharedPreferences: SharedPreferences =
-            requireActivity().getSharedPreferences(sharedPref, Context.MODE_PRIVATE)
-        val editor: SharedPreferences.Editor = sharedPreferences.edit()
         var username = ""
         var email = ""
         var images = ""
@@ -108,7 +106,7 @@ class RegisterFragment : Fragment() {
             repassword
         )
 
-        if (username.isEmpty() || email.isEmpty() || password.isEmpty() || repassword.isEmpty()) {
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty() || repassword.isEmpty() ||images.isEmpty()) {
             Toast.makeText(
                 requireContext(),
                 "Silahkan isi kolom terlebih dahulu",
@@ -117,27 +115,32 @@ class RegisterFragment : Fragment() {
         } else if (password != repassword) {
             binding.etConfirmPassword.setError("Password is not same!")
         } else {
-            Thread {
-                val result = user_db?.UserDao()?.insertUser(userList)
-                activity?.runOnUiThread {
-                    if (result != 0.toLong()) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Sukses Menambahkan ${userList.username}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        editor.putString("images", images)
-                        editor.apply()
-                        findNavController().navigate(RegisterFragmentDirections.actionRegisterFragmentToLoginFragment())
-                    } else {
-                        Toast.makeText(
-                            requireContext(),
-                            "Gagal menambahkan ${userList.username}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }.start()
+            registerViewModel.addUser(userList)
+            registerViewModel.successValidate().observe(viewLifecycleOwner){
+                Log.d("View Model",it);
+            }
+            findNavController().navigate(RegisterFragmentDirections.actionRegisterFragmentToLoginFragment())
+//            Thread {
+//                val result = user_db?.UserDao()?.insertUser(userList)
+//                activity?.runOnUiThread {
+//                    if (result != 0.toLong()) {
+//                        Toast.makeText(
+//                            requireContext(),
+//                            "Sukses Menambahkan ${userList.username}",
+//                            Toast.LENGTH_LONG
+//                        ).show()
+//                        editor.putString("images", images)
+//                        editor.apply()
+//                        findNavController().navigate(RegisterFragmentDirections.actionRegisterFragmentToLoginFragment())
+//                    } else {
+//                        Toast.makeText(
+//                            requireContext(),
+//                            "Gagal menambahkan ${userList.username}",
+//                            Toast.LENGTH_LONG
+//                        ).show()
+//                    }
+//                }
+//            }.start()
         }
     }
 
@@ -145,7 +148,7 @@ class RegisterFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding = FragmentRegisterBinding.inflate(inflater, container, false)
+        _binding = FragmentRegisterBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -248,5 +251,6 @@ class RegisterFragment : Fragment() {
         }
         return Uri.parse(file.absolutePath)
     }
+
 
 }

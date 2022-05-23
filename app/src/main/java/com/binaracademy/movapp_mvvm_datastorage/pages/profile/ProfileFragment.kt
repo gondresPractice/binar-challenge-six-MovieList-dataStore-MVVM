@@ -73,9 +73,7 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         userManager =
             com.binaracademy.movapp_mvvm_datastorage.data_store.UserManager(requireContext())
-        user_db = UserDatabase.getInstance(requireContext())
-
-        getProfile()
+       getProfile()
         getProfileUser(getProfile())
 
 

@@ -17,19 +17,19 @@ import com.binaracademy.movapp_mvvm_datastorage.databinding.FragmentLoginBinding
 import com.binaracademy.movapp_mvvm_datastorage.databinding.FragmentRegisterBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class LoginFragment : Fragment() {
 
-    lateinit var userManager : com.binaracademy.movapp_mvvm_datastorage.data_store.UserManager
-    private var user_db : UserDatabase?= null
+
     private lateinit var binding : FragmentLoginBinding
+    private val loginViewModel: LoginViewModel by viewModel()
     private val sharedPref = "sharedpreferences"
     lateinit var username : String
     var isLoggedIn : Boolean = false
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        userManager = com.binaracademy.movapp_mvvm_datastorage.data_store.UserManager(requireContext())
-        user_db = UserDatabase.getInstance(requireContext())
+        
         binding.apply {
             binding.btnLogin.setOnClickListener {
                 checkLogin()
@@ -40,24 +40,16 @@ class LoginFragment : Fragment() {
         }
     }
 
-    private fun saveUsername() {
-         username = binding.etUsername.text.toString()
-         isLoggedIn = true
+//    private fun saveUsername() {
+//         username = binding.etUsername.text.toString()
+//         isLoggedIn = true
+//
+//        GlobalScope.launch {
+//            userManager.storePrefs(username,isLoggedIn)
+//        }
+//    }
 
-        GlobalScope.launch {
-            userManager.storePrefs(username,isLoggedIn)
-        }
-    }
 
-    private fun observeData(){
-
-        userManager.userNameFlow.asLiveData().observe(requireActivity(),{
-            username = it
-        })
-        userManager.isLoggedInFlow.asLiveData().observe(requireActivity(),{
-            isLoggedIn = it
-        })
-     }
 
     private fun checkLogin() {
 
@@ -74,27 +66,29 @@ class LoginFragment : Fragment() {
                 Toast.LENGTH_LONG
             ).show()
         } else {
-            Thread {
-                val result = user_db?.UserDao()?.login(username, password)
-                activity?.runOnUiThread {
-                    if (result != null) {
-                        saveUsername()
-                        observeData()
-                        Toast.makeText(
-                            requireContext(),
-                            "Login berhasil",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        findNavController().navigate(LoginFragmentDirections.actionLoginFragmentToHomeFragment())
-                    } else {
-                        Toast.makeText(
-                            requireContext(),
-                            "Gagal Login ",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }.start()
+                loginViewModel.loginCheck(username,password)
+            findNavController().navigate(LoginFragmentDirections.actionLoginFragmentToHomeFragment())
+//
+//            Thread {
+//                val result = user_db?.UserDao()?.login(username, password)
+//                activity?.runOnUiThread {
+//                    if (result != null) {
+//                        saveUsername()
+//                        observeData()
+//                        Toast.makeText(
+//                            requireContext(),
+//                            "Login berhasil",
+//                            Toast.LENGTH_LONG
+//                        ).show()
+//                    } else {
+//                        Toast.makeText(
+//                            requireContext(),
+//                            "Gagal Login ",
+//                            Toast.LENGTH_LONG
+//                        ).show()
+//                    }
+//                }
+//            }.start()
         }
     }
 

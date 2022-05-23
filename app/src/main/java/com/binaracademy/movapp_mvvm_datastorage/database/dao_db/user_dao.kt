@@ -19,7 +19,7 @@ interface user_dao {
     fun getUser(id:Int): User
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertUser(user : User): Long
+     fun insertUser(user : User): Long
 
     @Query("UPDATE User SET images=:images Where id=:id")
     fun updateImages(id:Int, images:String): Int

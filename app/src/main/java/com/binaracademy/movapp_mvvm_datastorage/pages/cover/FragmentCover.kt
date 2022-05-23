@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.asLiveData
 import androidx.navigation.fragment.findNavController
 import com.binaracademy.movapp_mvvm_datastorage.R
+import com.binaracademy.movapp_mvvm_datastorage.data_store.UserManager
 import com.binaracademy.movapp_mvvm_datastorage.databinding.ActivityCoverBinding
 import com.binaracademy.movapp_mvvm_datastorage.databinding.FragmentRegisterBinding
 
@@ -21,7 +22,7 @@ class FragmentCover : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        userManager = com.binaracademy.movapp_mvvm_datastorage.data_store.UserManager(requireContext())
+        userManager = UserManager(requireActivity())
         checkLoginStatus()
 
 

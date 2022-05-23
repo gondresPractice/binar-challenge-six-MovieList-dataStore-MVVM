@@ -14,39 +14,38 @@ import com.binaracademy.movapp_mvvm_datastorage.database.create_db.UserDatabase
 import com.binaracademy.movapp_mvvm_datastorage.database.model_db.Favorite
 import com.binaracademy.movapp_mvvm_datastorage.databinding.FragmentDetailBinding
 import com.bumptech.glide.Glide
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 class DetailFragment : Fragment() {
 
     private val arguments: DetailFragmentArgs by navArgs()
     private lateinit var binding: FragmentDetailBinding
+    private val detailViewModel : DetailViewModel by viewModel()
     private var user_db: UserDatabase? = null
     var movieId: Int = 0
     var checkFav = false
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        user_db = UserDatabase.getInstance(requireContext())
-
-
         bindingItemView()
         checkFavorite()
+        movieId = arguments.detail.id
+        Log.d("ID Movie", movieId.toString())
 
         binding.ivBack.setOnClickListener {
             findNavController().navigate(DetailFragmentDirections.actionDetailFragmentToHomeFragment())
         }
         binding.ivFavorite.setOnClickListener {
 
-         if(checkFavorite() == true){
-             Thread {
-                 val result = user_db?.FavoriteDao()?.deleteFavorite(movieId)
-                 activity?.runOnUiThread {
-                     if (result != 0) {
-                         binding.ivFavorite.setImageResource(R.drawable.ic_favorite)
-                     }
-                 }
-             }.start()
+         if(checkFav == false){
 
+            detailViewModel.deleteFromFavorite(movieId)
+             detailViewModel.checkStatDelete().observe(viewLifecycleOwner){
+                 if (it==true){
+                     binding.ivFavorite.setImageResource(R.drawable.ic_favorite)
+                 }
+             }
          }else{
              val favoriteList = Favorite(
                  arguments.detail.id,
@@ -58,28 +57,15 @@ class DetailFragment : Fragment() {
                  arguments.detail.rating,
                  arguments.detail.popularity
              )
-             Thread {
-                 val result = user_db?.FavoriteDao()?.insertFavorite(favoriteList)
-                 activity?.runOnUiThread {
-                     if (result != 0.toLong()) {
-                         Toast.makeText(
-                             requireContext(),
-                             "Sukses Menambahkan ke Favorite",
-                             Toast.LENGTH_SHORT
-                         ).show()
-                         Log.d("Insert", favoriteList.toString())
-                         binding.ivFavorite.setImageResource(R.drawable.ic_favorite_saved)
-
-//                        findNavController().navigate(RegisterFragmentDirections.actionRegisterFragmentToLoginFragment())
-                     } else {
-                         Toast.makeText(
-                             requireContext(),
-                             "Gagal menambahkan ke Favorite",
-                             Toast.LENGTH_LONG
-                         ).show()
-                     }
+             detailViewModel.insertToFavorite(favoriteList)
+             detailViewModel.checkStatInsert().observe(viewLifecycleOwner){
+                 if(it == true){
+                     Log.d("Insert", favoriteList.toString())
+                     binding.ivFavorite.setImageResource(R.drawable.ic_favorite_saved)
+                 }else{
+                     Log.d("Gagal menambahkan", favoriteList.toString())
                  }
-             }.start()
+             }
          }
 
         }
@@ -87,18 +73,18 @@ class DetailFragment : Fragment() {
 
     private fun checkFavorite() : Boolean {
 
-        Thread {
-            val result = user_db?.FavoriteDao()?.getDetailFavorite(movieId)
-            activity?.runOnUiThread {
-                if (result != 0) {
-                    binding.ivFavorite.setImageResource(R.drawable.ic_favorite_saved)
-                    checkFav = true
-                } else {
-                    binding.ivFavorite.setImageResource(R.drawable.ic_favorite)
-                    checkFav = false
-                }
+        detailViewModel.checkFavoriteData(movieId)
+        detailViewModel.checkStatFavorite().observe(viewLifecycleOwner){
+            if(it == true){
+                checkFav = true
+                binding.ivFavorite.setImageResource(R.drawable.ic_favorite_saved)
+            }else{
+                checkFav = false
+                binding.ivFavorite.setImageResource(R.drawable.ic_favorite)
             }
-        }.start()
+            Log.d("Chek Fav",it.toString())
+        }
+
 
         return checkFav
     }
@@ -117,7 +103,7 @@ class DetailFragment : Fragment() {
         var rate = rating.toFloat()
         "%.0f".format(rate)
 
-        print("ID $movieId")
+        Log.d("ID Movie", movieId.toString())
 
         binding.proggRate.setProgress(rating.toInt() * 10)
         binding.tvTitle.setText(title)

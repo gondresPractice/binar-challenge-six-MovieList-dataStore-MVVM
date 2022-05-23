@@ -13,21 +13,20 @@ import com.binaracademy.movapp_mvvm_datastorage.adapter.FavoriteAdapter
 import com.binaracademy.movapp_mvvm_datastorage.database.create_db.UserDatabase
 import com.binaracademy.movapp_mvvm_datastorage.database.model_db.Favorite
 import com.binaracademy.movapp_mvvm_datastorage.databinding.FragmentFavoriteBinding
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 class FavoriteFragment : Fragment() {
 
     private lateinit var binding : FragmentFavoriteBinding
     private val sharedPref = "sharedpreferences"
+    private val favoriteViewModel : FavoriteViewModel by viewModel()
     var listFavorite : List<Favorite>? = null
     var adapter : FavoriteAdapter?=null
     private var user_db : UserDatabase? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val sharedPreferences : SharedPreferences = requireActivity().getSharedPreferences(sharedPref, Context.MODE_PRIVATE)
-
-        user_db = UserDatabase.getInstance(requireContext())
 
         fetchFavorite()
 
@@ -38,22 +37,15 @@ class FavoriteFragment : Fragment() {
     }
 
     private fun fetchFavorite() {
-       Thread{
-            listFavorite = user_db?.FavoriteDao()?.getFavorite()
-           activity?.runOnUiThread {
-               listFavorite?.let {
-                   if(it==null){
-                       binding.progressBar.visibility = View.VISIBLE
-                   }else{
-                       binding.progressBar.visibility = View.GONE
-                   }
-                   adapter = FavoriteAdapter(it)
-                   val layoutManager = LinearLayoutManager(requireActivity(),LinearLayoutManager.VERTICAL,false)
+        favoriteViewModel.getFavoriteList()
+        favoriteViewModel.getFavorite().observe(viewLifecycleOwner){
+            adapter = FavoriteAdapter(it)
+            val layoutManager = LinearLayoutManager(requireActivity(),LinearLayoutManager.VERTICAL,false)
                    binding.rvMain.layoutManager = layoutManager
                    binding.rvMain.adapter = adapter
-               }
-           }
-       }.start()
+            binding.progressBar.visibility = View.GONE
+        }
+
     }
 
     override fun onCreateView(

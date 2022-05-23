@@ -6,7 +6,7 @@
 
     <fragment
         android:id="@+id/registerFragment"
-        android:name="com.binaracademy.movapp_mvvm_datastorage.pages.RegisterFragment"
+        android:name="com.binaracademy.movapp_mvvm_datastorage.pages.register.RegisterFragment"
         android:label="RegisterFragment" >
         <action
             android:id="@+id/action_registerFragment_to_loginFragment"

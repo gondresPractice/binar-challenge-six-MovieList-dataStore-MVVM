@@ -11,7 +11,7 @@ interface favorite_dao {
     fun getFavorite(): List<Favorite>
 
     @Query("SELECT * From Favorite Where id=:id ")
-    fun getDetailFavorite(id:Int): Int
+    fun getDetailFavorite(id:Int):Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertFavorite(favorite : Favorite) :Long
