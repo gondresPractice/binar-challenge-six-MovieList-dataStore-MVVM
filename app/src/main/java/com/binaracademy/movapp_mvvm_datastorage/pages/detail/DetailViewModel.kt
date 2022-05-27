@@ -56,11 +56,11 @@ class DetailViewModel(
             val result = repository.getDetailFavorite(movieId)
             runBlocking(Dispatchers.Main){
                 if (result!=null){
-                    Log.d("Check Favorite Data","False")
-                    checkFavorite.postValue(false)
-                }else{
                     Log.d("Check Favorite Data","True")
                     checkFavorite.postValue(true)
+                }else{
+                    Log.d("Check Favorite Data","")
+                    checkFavorite.postValue(false)
                 }
             }
         }

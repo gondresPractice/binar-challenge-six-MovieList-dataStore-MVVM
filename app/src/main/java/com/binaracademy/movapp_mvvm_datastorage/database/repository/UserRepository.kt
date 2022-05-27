@@ -16,4 +16,16 @@ class UserRepository(private val userDao: user_dao,private val context: Context)
     suspend fun getPhotoProfile(username:String):String{
         return userDao.getPhotoProfile(username)
     }
+
+    suspend fun updateProfile(username: String,email:String,images:String,id:Int):Int{
+        return userDao.updateUserProfile(id,username,email,images)
+    }
+
+    suspend fun getId(username:String) :Int{
+        return userDao.getId(username)
+    }
+
+    suspend fun getUser(id : Int):User{
+        return userDao.getUser(id)
+    }
 }

@@ -30,6 +30,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -41,10 +42,13 @@ class ProfileFragment : Fragment() {
 
     lateinit var userManager: com.binaracademy.movapp_mvvm_datastorage.data_store.UserManager
     private var user_db: UserDatabase? = null
+    private val profileViewModel: ProfileViewModel by viewModel()
     private val sharedPref = "sharedpreferences"
     private lateinit var binding: FragmentProfileBinding
     var idProfile: Int = 0
     var isLoggedIn: Boolean = false
+    var username = ""
+    var email =""
     lateinit var resultImage: String
     lateinit var password: String
     lateinit var rePassword: String
@@ -73,8 +77,12 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         userManager =
             com.binaracademy.movapp_mvvm_datastorage.data_store.UserManager(requireContext())
-       getProfile()
-        getProfileUser(getProfile())
+        profileViewModel.getUsername().observe(viewLifecycleOwner){
+            profileViewModel.getIdProfile(it)
+            binding.etUsername.setText(it)
+            getProfile()
+        }
+
 
 
         binding.apply {
@@ -95,40 +103,23 @@ class ProfileFragment : Fragment() {
                         dialog.dismiss()
                     }
                     .show()
-           }
+            }
             binding.addImage.setOnClickListener {
                 checkingPermissions()
 
             }
             binding.btnUpdate.setOnClickListener {
+
                 var email = binding.etEmail.text.toString()
                 var username = binding.etUsername.text.toString()
+
                 savePrefs()
                 AlertDialog.Builder(requireActivity())
                     .setTitle("Update")
                     .setMessage("You sure want to Update?")
                     .setCancelable(true)
                     .setPositiveButton("Update") { dialog, _ ->
-                        Thread {
-                            val result = user_db?.UserDao()
-                                ?.updateUserProfile(idProfile, username, email, resultImage)
-                            activity?.runOnUiThread {
-                                if (result != 0) {
-                                    Toast.makeText(
-                                        requireActivity(),
-                                        "Update berhasil",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                } else {
-                                    Toast.makeText(
-                                        requireActivity(),
-                                        "Update gagal",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
-
-                        }.start()
+                        profileViewModel.updateUser(idProfile,username,email, resultImage)
                     }
                     .setNegativeButton("Cancel") { dialog, _ ->
                         dialog.dismiss()
@@ -152,44 +143,63 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun getProfileUser(id: Int) {
 
-    }
 
     private fun getProfile(): Int {
-        var id = 0
-        userManager.userNameFlow.asLiveData().observe(requireActivity(), {
-            Thread {
-                val resultId = user_db?.UserDao()?.getId(it)
-                activity?.runOnUiThread {
-                    if (resultId != 0) {
-                        idProfile = resultId!!
-                        Thread {
-                            val result = user_db?.UserDao()?.getUser(resultId!!)
-                            activity?.runOnUiThread {
-                                if (result != null) {
-                                    binding.etEmail.setText(result.email)
-                                    binding.etUsername.setText(result.username)
-                                    password = result.password
-                                    rePassword = result.repassword
-                                    resultImage = result.images
-                                    Glide.with(requireActivity()).load(result.images)
-                                        .apply(RequestOptions.centerCropTransform()).error(
-                                        R.drawable.ic_baseline_profile_24
-                                    ).into(binding.profileImage)
-                                } else {
-                                    Toast.makeText(
-                                        requireContext(),
-                                        "Ggal fetch profile",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
-                        }.start()
-                    }
-                }
-            }.start()
-        })
+
+
+
+        profileViewModel.images.observe(viewLifecycleOwner) {
+            Glide.with(requireActivity()).load(it)
+                .apply(RequestOptions.centerCropTransform()).error(
+                    R.drawable.ic_baseline_profile_24
+                ).into(binding.profileImage)
+            resultImage = it
+        }
+        profileViewModel.username.observe(viewLifecycleOwner) {
+            username = it
+            binding.etUsername.setText(it)
+        }
+        profileViewModel.email.observe(viewLifecycleOwner) {
+            email = it
+            binding.etEmail.setText(it)
+        }
+
+        profileViewModel.id.observe(viewLifecycleOwner){
+            idProfile = it
+        }
+//        userManager.userNameFlow.asLiveData().observe(requireActivity(), {
+//            Thread {
+//                val resultId = user_db?.UserDao()?.getId(it)
+//                activity?.runOnUiThread {
+//                    if (resultId != 0) {
+//                        idProfile = resultId!!
+//                        Thread {
+//                            val result = user_db?.UserDao()?.getUser(resultId!!)
+//                            activity?.runOnUiThread {
+//                                if (result != null) {
+//                                    binding.etEmail.setText(result.email)
+//                                    binding.etUsername.setText(result.username)
+//                                    password = result.password
+//                                    rePassword = result.repassword
+//                                    resultImage = result.images
+//                                    Glide.with(requireActivity()).load(result.images)
+//                                        .apply(RequestOptions.centerCropTransform()).error(
+//                                        R.drawable.ic_baseline_profile_24
+//                                    ).into(binding.profileImage)
+//                                } else {
+//                                    Toast.makeText(
+//                                        requireContext(),
+//                                        "Ggal fetch profile",
+//                                        Toast.LENGTH_LONG
+//                                    ).show()
+//                                }
+//                            }
+//                        }.start()
+//                    }
+//                }
+//            }.start()
+//        })
 
 
         return id
@@ -290,6 +300,7 @@ class ProfileFragment : Fragment() {
         }
         return Uri.parse(file.absolutePath)
     }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

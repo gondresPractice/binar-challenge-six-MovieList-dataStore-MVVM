@@ -7,6 +7,7 @@ import com.binaracademy.movapp_mvvm_datastorage.pages.detail.DetailViewModel
 import com.binaracademy.movapp_mvvm_datastorage.pages.favorite.FavoriteViewModel
 import com.binaracademy.movapp_mvvm_datastorage.pages.home.HomeViewModel
 import com.binaracademy.movapp_mvvm_datastorage.pages.login.LoginViewModel
+import com.binaracademy.movapp_mvvm_datastorage.pages.profile.ProfileViewModel
 import com.binaracademy.movapp_mvvm_datastorage.pages.register.RegisterFragmentViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import org.koin.android.ext.koin.androidContext
@@ -20,6 +21,7 @@ val viewModelModule = module{
     viewModel {HomeViewModel(get(),get())}
     viewModel {DetailViewModel(get(),get())}
     viewModel {FavoriteViewModel(get())}
+    viewModel {ProfileViewModel(get(),get())}
 }
 val repositoryModule = module{
     single{ UserRepository(get(), androidContext()) }
