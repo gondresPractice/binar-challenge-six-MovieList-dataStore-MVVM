@@ -10,18 +10,45 @@ android {
     compileSdk 32
 
     defaultConfig {
-        applicationId "com.binaracademy.movapp_mvvm_datastorage"
+        applicationId "com.example.movietmdbchallenge"
         minSdk 23
         targetSdk 32
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
+    flavorDimensions "version"
+    productFlavors{
+        demo{
+            dimension "version"
+            applicationIdSuffix ".demo"
+            versionNameSuffix "-demo"
+        }
+        full {
+            dimension "version"
+            applicationIdSuffix ".full"
+            versionNameSuffix "-full"
+        }
+        free{
+            applicationIdSuffix ".free"
+        }
+        pro {
+            applicationIdSuffix ".pro"
+        }
+    }
     buildTypes {
+        debug{
+            minifyEnabled false
+            debuggable true
+            applicationIdSuffix ".debug"
+        }
+        qa{
+            minifyEnabled true
+            debuggable false
+        }
         release {
             minifyEnabled false
+            debuggable false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
